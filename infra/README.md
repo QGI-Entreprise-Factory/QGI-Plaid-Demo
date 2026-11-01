@@ -35,3 +35,16 @@ tofu fmt -check -recursive infra
 - Configure a remote state backend (S3 + lock) in the platform account; state can hold sensitive values and is gitignored here.
 - Have a compliance contact review `org/guardrails.tf`.
 - SCPs are attached to the Tenants OU only, never the root. The management account is not affected by SCPs, so keep workloads out of it.
+
+## Bootstrap order for a new tenant (learned from the demo)
+
+The tenant guardrail SCPs deny IAM changes to everyone except `QGI-PlatformAdmin` and `QGI-BreakGlass`, and those roles are created by the tenant stack itself. So:
+
+1. Create the account **before** the SCPs are attached to its OU (or attach them afterwards): `tofu apply -target=aws_organizations_account.tenant` in `infra/org`.
+2. First tenant apply uses the bootstrap role: `tofu apply -var assume_role_name=OrganizationAccountAccessRole` in `infra/tenants/<slug>`.
+3. Attach the guardrails (`tofu apply` in `infra/org`).
+4. From then on use the default role (`QGI-PlatformAdmin`). Changes to the baseline roles themselves need `QGI-BreakGlass` (MFA, 1h session, alarmed).
+
+**New accounts take time to activate.** Right after creation, EC2/S3/KMS/Cognito/etc. return `OptInRequired` / `NotSignedUp` (only IAM works). This can last from minutes to about a day. Retry `tofu plan` later; nothing is wrong with the configuration.
+
+Plan/state files (`*.tfplan`, `*.tfstate`, `*.tfvars`) and real tenant stacks (`infra/tenants/<slug>/`) are gitignored. Move state to a remote backend before real use.

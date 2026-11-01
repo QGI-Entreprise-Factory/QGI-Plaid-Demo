@@ -64,3 +64,8 @@ python/venv/*
 *.tfstate.*
 *.tfvars
 crash.log
+
+# Real tenant stacks stay private; only the template is part of the public repo
+infra/tenants/*
+!infra/tenants/_template
+*.tfplan

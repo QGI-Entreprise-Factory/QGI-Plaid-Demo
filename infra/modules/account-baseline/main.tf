@@ -141,9 +141,38 @@ resource "aws_iam_role_policy_attachment" "break_glass_admin" {
 
 # --- Alarm on any break-glass use ------------------------------------------------------------
 
+# EventBridge cannot publish to a topic encrypted with the AWS-managed SNS key, so use our own key.
+data "aws_iam_policy_document" "alarm_key" {
+  statement {
+    sid       = "AccountRootAdministers"
+    actions   = ["kms:*"]
+    resources = ["*"]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+  statement {
+    sid       = "EventBridgeAndSnsUseKey"
+    actions   = ["kms:Decrypt", "kms:GenerateDataKey*"]
+    resources = ["*"]
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com", "sns.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_kms_key" "alarm" {
+  description             = "Encrypts the break-glass alarm topic"
+  enable_key_rotation     = true
+  deletion_window_in_days = 30
+  policy                  = data.aws_iam_policy_document.alarm_key.json
+}
+
 resource "aws_sns_topic" "break_glass" {
   name              = "qgi-break-glass-used"
-  kms_master_key_id = "alias/aws/sns"
+  kms_master_key_id = aws_kms_key.alarm.arn
 }
 
 resource "aws_sns_topic_subscription" "email" {

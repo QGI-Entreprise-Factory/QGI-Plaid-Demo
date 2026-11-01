@@ -23,10 +23,20 @@ locals {
   alarm_email            = ""
 }
 
+variable "assume_role_name" {
+  description = <<-EOT
+    Role OpenTofu assumes in the tenant account. The FIRST apply must use OrganizationAccountAccessRole,
+    because the tenant guardrail SCPs deny IAM changes to everyone but the QGI roles, which this stack
+    creates. Afterwards use the default (QGI-PlatformAdmin). Baseline-role changes need QGI-BreakGlass.
+  EOT
+  type        = string
+  default     = "QGI-PlatformAdmin"
+}
+
 provider "aws" {
   region = local.region
   assume_role {
-    role_arn = "arn:aws:iam::${local.account_id}:role/OrganizationAccountAccessRole"
+    role_arn = "arn:aws:iam::${local.account_id}:role/${var.assume_role_name}"
   }
   default_tags {
     tags = { Tenant = local.tenant_slug, ManagedBy = "opentofu", Platform = "qgi" }

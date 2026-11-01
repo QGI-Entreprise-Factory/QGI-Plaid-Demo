@@ -21,12 +21,15 @@ dest="$root/infra/tenants/$slug"
 [ ! -e "$dest" ] || { echo "$dest already exists" >&2; exit 1; }
 
 mkdir -p "$dest"
-# Rewrite the locals by key name; the template itself holds valid dummy values.
-sed -e "s/^\(  tenant_slug *= \).*/\1\"$slug\"/" \
+# Rewrite only the `locals { ... }` block by key name (the range stops other blocks that reuse
+# these names, e.g. `region = local.region`, from matching). The template holds valid dummy values.
+sed -e '/^locals {/,/^}/{' \
+    -e "s/^\(  tenant_slug *= \).*/\1\"$slug\"/" \
     -e "s/^\(  account_id *= \).*/\1\"$account\"/" \
     -e "s/^\(  region *= \).*/\1\"$region\"/" \
     -e "s/^\(  organization_id *= \).*/\1\"$org\"/" \
     -e "s#^\(  trusted_principal_arns *= \).*#\1[\"arn:aws:iam::$platform:root\"]#" \
+    -e '}' \
     "$root/infra/tenants/_template/main.tf" > "$dest/main.tf"
 
 echo "Created $dest"
