@@ -93,10 +93,12 @@ data "aws_iam_policy_document" "platform_iam" {
     resources = ["*"]
   }
   statement {
-    sid       = "NeverTouchPrivilegedRoles"
-    effect    = "Deny"
-    actions   = ["iam:*"]
-    resources = [local.platform_admin_arn, local.break_glass_arn]
+    # Block every change to the two privileged roles, but keep reads allowed so the platform
+    # can still refresh/plan this stack (a blanket iam:* deny also blocks iam:GetRole).
+    sid         = "NeverChangePrivilegedRoles"
+    effect      = "Deny"
+    not_actions = ["iam:Get*", "iam:List*"]
+    resources   = [local.platform_admin_arn, local.break_glass_arn]
   }
 }
 
