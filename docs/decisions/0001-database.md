@@ -1,6 +1,6 @@
 # 0001: Database per tenant (AWS)
 
-Status: **open, awaiting decision.** Each tenant lives in its own AWS account (see `docs/architecture.md`), so the choice below is applied once per tenant account by `infra/modules/tenant`.
+Status: **decided (2026-11-01): Aurora PostgreSQL Serverless v2.** The table below records the options considered. Each tenant lives in its own AWS account (see `docs/architecture.md`), so the choice below is applied once per tenant account by `infra/modules/tenant`.
 
 | Option | Good for | Cost shape | Trade-offs |
 |---|---|---|---|

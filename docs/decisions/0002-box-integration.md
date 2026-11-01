@@ -1,6 +1,6 @@
 # 0002: Box integration for documents
 
-Status: **open, awaiting decision.** Documents (statements, KYC, contracts) are stored outside the transactional database.
+Status: **decided (2026-11-01): both, each tenant's choice.** Box (per tenant) and tenant S3 sit behind one document-storage interface; the tenant picks at onboarding. Documents (statements, KYC, contracts) are stored outside the transactional database.
 
 | Option | How it works | Trade-offs |
 |---|---|---|

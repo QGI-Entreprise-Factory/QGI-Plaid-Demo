@@ -43,6 +43,6 @@ Statements and KYC files: Box or tenant S3 with KMS, per tenant preference. Stru
 Default `us-east-1`. Tenants needing in-country residency (for example Canada) get `ca-central-1`. Region is a per-tenant input; SCPs deny all other regions.
 
 ## Open items
-- Database engine (Aurora PostgreSQL vs DynamoDB) per workload.
+- Decided: Aurora PostgreSQL Serverless v2 per tenant (`docs/decisions/0001-database.md`); documents via Box or tenant S3, tenant's choice (`0002-box-integration.md`); MCP sign-in via OAuth through the tenant's Cognito.
 - Account Factory mechanism (Control Tower vs custom Organizations automation).
 - Compliance scope per tenant (SOC 2, GLBA, PCI exposure) and who signs off.
