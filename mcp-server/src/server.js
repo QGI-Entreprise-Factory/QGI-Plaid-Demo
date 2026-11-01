@@ -1,8 +1,10 @@
-import { timingSafeEqual } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
 import express from 'express';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { z } from 'zod';
+import { REQUIRED_SCOPE, buildAuthenticator } from './auth.js';
+import { createDocumentStore } from './documents/index.js';
 import { createSandboxLinkToken, getSandboxUser, listSandboxUsers, plaidStatus } from './tools.js';
 
 const asText = (value) => ({ content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] });
@@ -16,8 +18,8 @@ const safely = (fn) => async (args) => {
 };
 
 /** One server instance per request keeps the endpoint stateless. All tools are read-only. */
-export function buildServer() {
-  const server = new McpServer({ name: 'qgi-plaid', version: '0.1.0' });
+export function buildServer({ documents = null } = {}) {
+  const server = new McpServer({ name: 'qgi-plaid', version: '0.2.0' });
 
   server.registerTool(
     'plaid_status',
@@ -49,26 +51,52 @@ export function buildServer() {
     safely(({ products }) => createSandboxLinkToken({ products })),
   );
 
+  if (documents) {
+    server.registerTool(
+      'list_documents',
+      {
+        description: `List the tenant's documents (metadata only) from the configured ${documents.kind} store.`,
+        inputSchema: { folder: z.string().optional().describe('Optional sub-folder (S3 store only)') },
+      },
+      safely(({ folder }) => documents.list(folder)),
+    );
+    server.registerTool(
+      'get_document_link',
+      {
+        description: 'Get a short-lived download link for one document. File contents are never returned through MCP.',
+        inputSchema: { id: z.string().describe('Document id from list_documents') },
+      },
+      safely(({ id }) => documents.link(id)),
+    );
+  }
+
   return server;
 }
 
-function authorised(header, expected) {
-  const given = Buffer.from((header ?? '').replace(/^Bearer\s+/i, ''));
-  const want = Buffer.from(expected);
-  return given.length === want.length && timingSafeEqual(given, want);
-}
-
-export function buildApp(apiKey) {
+export function buildApp({ authenticator, documents = null, publicUrl = 'http://127.0.0.1:8787', issuer = null }) {
   const app = express();
   app.use(express.json({ limit: '1mb' }));
 
-  app.get('/healthz', (_req, res) => res.json({ ok: true }));
+  app.get('/healthz', (_req, res) => res.json({ ok: true, auth: authenticator.mode }));
+
+  // OAuth protected-resource metadata (RFC 9728): tells AI clients which server to sign in with.
+  app.get('/.well-known/oauth-protected-resource', (_req, res) => {
+    if (!issuer) return res.status(404).json({ error: 'oauth not configured' });
+    res.json({
+      resource: `${publicUrl}/mcp`,
+      authorization_servers: [issuer],
+      scopes_supported: [REQUIRED_SCOPE],
+      bearer_methods_supported: ['header'],
+    });
+  });
 
   app.post('/mcp', async (req, res) => {
-    if (!authorised(req.get('authorization'), apiKey)) {
-      return res.status(401).set('WWW-Authenticate', 'Bearer').json({ error: 'unauthorized' });
+    const identity = await authenticator.authenticate(req.get('authorization'));
+    if (!identity) {
+      const challenge = issuer ? `Bearer resource_metadata="${publicUrl}/.well-known/oauth-protected-resource"` : 'Bearer';
+      return res.status(401).set('WWW-Authenticate', challenge).json({ error: 'unauthorized' });
     }
-    const server = buildServer();
+    const server = buildServer({ documents });
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     res.on('close', () => {
       transport.close();
@@ -85,13 +113,20 @@ export function buildApp(apiKey) {
   return app;
 }
 
-if (import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}`) {
-  const apiKey = process.env.MCP_API_KEY;
-  if (!apiKey || apiKey.length < 24) {
-    console.error('MCP_API_KEY must be set to a random string of at least 24 characters (e.g. `openssl rand -hex 32`).');
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    const authenticator = buildAuthenticator();
+    const port = Number(process.env.MCP_PORT ?? 8787);
+    const host = process.env.MCP_HOST ?? '127.0.0.1';
+    const app = buildApp({
+      authenticator,
+      documents: createDocumentStore(),
+      publicUrl: process.env.MCP_PUBLIC_URL ?? `http://${host}:${port}`,
+      issuer: authenticator.mode === 'oauth' ? process.env.COGNITO_ISSUER : null,
+    });
+    app.listen(port, host, () => console.log(`qgi-plaid MCP (${authenticator.mode} auth) listening on http://${host}:${port}/mcp`));
+  } catch (err) {
+    console.error(err.message);
     process.exit(1);
   }
-  const port = Number(process.env.MCP_PORT ?? 8787);
-  const host = process.env.MCP_HOST ?? '127.0.0.1';
-  buildApp(apiKey).listen(port, host, () => console.log(`qgi-plaid MCP listening on http://${host}:${port}/mcp`));
 }
