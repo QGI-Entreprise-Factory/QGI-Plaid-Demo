@@ -1,0 +1,56 @@
+{
+    "override_accounts": [
+        {
+            "type": "depository",
+            "subtype": "checking",
+            "starting_balance": 150000,
+            "transactions": [
+                {
+                    "date_transacted": "2026-10-29",
+                    "date_posted": "2026-10-29",
+                    "amount": 10000,
+                    "description": "Employee Payroll",
+                    "currency": "USD"
+                },
+                {
+                    "date_transacted": "2026-10-29",
+                    "date_posted": "2026-10-29",
+                    "amount": 5000,
+                    "description": "Office Rental",
+                    "currency": "USD"
+                },
+                {
+                    "date_transacted": "2026-10-29",
+                    "date_posted": "2026-10-30",
+                    "amount": -15000,
+                    "description": "Transfer from Savings",
+                    "currency": "USD"
+                },
+                {
+                    "date_transacted": "2026-10-31",
+                    "date_posted": "2026-10-31",
+                    "amount": 15000,
+                    "description": "United States Gypsum Corporation - Drywall",
+                    "currency": "USD"
+                }
+            ],
+            "identity": {
+                "names": [
+                    "John Smith"
+                ],
+                "addresses": [
+                    {
+                        "primary": true,
+                        "data": {
+                            "country": "US",
+                            "city": "New York",
+                            "street": "10003 Broadway Road",
+                            "postal_code": "10003",
+                            "region": "NY"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
