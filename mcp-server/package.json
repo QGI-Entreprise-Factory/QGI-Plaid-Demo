@@ -1,0 +1,20 @@
+{
+  "name": "qgi-plaid-mcp",
+  "version": "0.1.0",
+  "description": "QGI Plaid app MCP server: lets Claude Code, Codex, Gemini and ChatGPT operate the platform over remote MCP",
+  "type": "module",
+  "private": true,
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "express": "^5.3.0",
+    "zod": "^4.6.7"
+  }
+}

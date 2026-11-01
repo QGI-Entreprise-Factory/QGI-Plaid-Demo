@@ -58,3 +58,9 @@ python/venv/*
 
 # Claude Code local settings
 .claude/
+# OpenTofu / Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
