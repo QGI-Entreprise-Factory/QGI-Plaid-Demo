@@ -108,19 +108,25 @@ locals {
         Condition = { ArnNotLike = { "aws:PrincipalARN" = local.break_glass_only } }
       },
       {
-        Sid       = "ProtectS3PublicAccessBlock"
+        # Account-wide public-access settings: break-glass only.
+        Sid       = "ProtectAccountPublicAccessBlock"
         Effect    = "Deny"
-        Action    = ["s3:PutAccountPublicAccessBlock", "s3:PutBucketPublicAccessBlock", "s3:DeletePublicAccessBlock"]
+        Action    = ["s3:PutAccountPublicAccessBlock"]
         Resource  = "*"
         Condition = { ArnNotLike = { "aws:PrincipalARN" = local.break_glass_only } }
       },
       {
-        Sid       = "DenyUnencryptedS3Uploads"
+        # Bucket-level settings: the platform role must be able to create/manage them (the tenant
+        # module does), so it is exempt. Nobody else may weaken or remove them.
+        Sid       = "ProtectBucketPublicAccessBlock"
         Effect    = "Deny"
-        Action    = "s3:PutObject"
+        Action    = ["s3:PutBucketPublicAccessBlock", "s3:DeletePublicAccessBlock"]
         Resource  = "*"
-        Condition = { Null = { "s3:x-amz-server-side-encryption" = "true" } }
+        Condition = { ArnNotLike = { "aws:PrincipalARN" = local.exempt_roles } }
       },
+      # Note: no "deny PutObject without encryption header" statement on purpose. It rejects normal
+      # uploads even when the bucket encrypts by default (AWS guidance). Enforce encryption with
+      # bucket default encryption (see infra/modules/tenant/documents.tf) instead.
       {
         Sid       = "DenyUnencryptedEbsVolumes"
         Effect    = "Deny"

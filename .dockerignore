@@ -1,0 +1,14 @@
+.git
+.env
+.env.*
+!.env.example
+**/node_modules
+infra
+docs
+frontend
+go
+java
+python
+ruby
+node
+assets

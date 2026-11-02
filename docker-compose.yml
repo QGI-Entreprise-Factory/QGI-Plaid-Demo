@@ -1,0 +1,17 @@
+# Local/demo run of the app MCP server. Build context is the repo root so the image can bundle sandbox-users/.
+#   docker compose up --build        (needs MCP_API_KEY in .env, or COGNITO_ISSUER + COGNITO_CLIENT_ID for OAuth)
+# The port is bound to localhost only. Put TLS in front (ALB/CloudFront/Caddy) before exposing it.
+services:
+  mcp:
+    build:
+      context: .
+      dockerfile: mcp-server/Dockerfile
+    env_file: .env
+    environment:
+      MCP_HOST: 0.0.0.0
+    ports:
+      - "127.0.0.1:8787:8787"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]

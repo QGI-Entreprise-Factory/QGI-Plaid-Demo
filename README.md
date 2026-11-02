@@ -1,5 +1,12 @@
 # Plaid quickstart
 
+> **QGI template.** This fork adds an AWS platform on top of the Plaid Quickstart: an account-per-tenant
+> design (`docs/architecture.md`), OpenTofu for the organization guardrails and each tenant stack (`infra/`),
+> a read-only Sandbox MCP server for AI clients (`mcp-server/`), the Plaid AI toolkit rules (`ai-rules/`) and
+> custom Sandbox users (`sandbox-users/`). Start with `CLAUDE.md` for the layout, `docs/sandbox-coverage.md`
+> for what the Sandbox can simulate (KYC, underwriting), and `infra/README.md` to add a tenant.
+> Use "Use this template" on GitHub, then replace the demo account values; never commit `.env` or state files.
+
 This repository accompanies Plaid's [**quickstart guide**][quickstart].
 
 Here you'll find full example integration apps using our [**client libraries**][libraries].
