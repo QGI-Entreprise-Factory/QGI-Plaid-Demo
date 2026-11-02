@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createSandboxLinkToken, getSandboxUser, listSandboxUsers, plaidStatus } from '../src/tools.js';
+import { listSandboxScenarios } from '../src/scenarios.js';
 
 test('lists bundled sandbox users', async () => {
   const files = await listSandboxUsers();
@@ -37,4 +38,13 @@ test('link token creation calls the sandbox host', async () => {
   const out = await createSandboxLinkToken({}, { PLAID_ENV: 'sandbox', PLAID_CLIENT_ID: 'x', PLAID_SECRET: 'y' }, fetchImpl);
   assert.equal(url, 'https://sandbox.plaid.com/link/token/create');
   assert.equal(out.link_token, 'link-sandbox-1');
+});
+
+test('scenario catalog lists KYC and underwriting, with gating', () => {
+  const ids = listSandboxScenarios().map((s) => s.id);
+  assert.deepEqual(ids, ['kyc', 'underwriting', 'income', 'bank-data']);
+  const uw = listSandboxScenarios('underwriting');
+  assert.ok(uw.testData.users.some((u) => u.username === 'user_credit_profile_poor'));
+  assert.match(uw.requires, /product access/);
+  assert.throws(() => listSandboxScenarios('nope'), /unknown scenario/);
 });

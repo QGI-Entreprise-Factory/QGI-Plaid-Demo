@@ -9,6 +9,7 @@ A remote [MCP](https://modelcontextprotocol.io) server so AI clients (Claude Cod
 | `plaid_status` | Which Plaid settings are configured (never returns secrets) |
 | `list_sandbox_users` | Custom Sandbox test users bundled in `sandbox-users/` |
 | `get_sandbox_user` | One user definition (path-checked, `.json` inside `sandbox-users/` only) |
+| `list_sandbox_scenarios` | Where to get Sandbox data for KYC, underwriting, income and bank-data scenarios, with account gating (static catalog, never calls Plaid) |
 | `create_sandbox_link_token` | Short-lived Link token in Sandbox |
 | `list_documents` | Tenant documents, metadata only (only when `DOCUMENT_STORE` is set) |
 | `get_document_link` | Short-lived download link for one document (file bytes never pass through MCP) |

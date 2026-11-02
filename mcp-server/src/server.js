@@ -5,6 +5,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { z } from 'zod';
 import { REQUIRED_SCOPE, buildAuthenticator } from './auth.js';
 import { createDocumentStore } from './documents/index.js';
+import { listSandboxScenarios } from './scenarios.js';
 import { createSandboxLinkToken, getSandboxUser, listSandboxUsers, plaidStatus } from './tools.js';
 
 const asText = (value) => ({ content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] });
@@ -40,6 +41,15 @@ export function buildServer({ documents = null } = {}) {
       inputSchema: { file: z.string().describe('Relative path from list_sandbox_users, e.g. "liabilities/credit_card_custom_user.json"') },
     },
     safely(({ file }) => getSandboxUser(file)),
+  );
+
+  server.registerTool(
+    'list_sandbox_scenarios',
+    {
+      description: 'Where to get Plaid Sandbox test data for KYC, underwriting, income and bank-data scenarios, including account gating. Omit id to list all.',
+      inputSchema: { id: z.string().optional().describe('Scenario id: kyc, underwriting, income or bank-data') },
+    },
+    safely(({ id }) => listSandboxScenarios(id)),
   );
 
   server.registerTool(

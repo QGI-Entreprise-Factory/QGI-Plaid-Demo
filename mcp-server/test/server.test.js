@@ -29,7 +29,7 @@ test('rejects requests without a valid key and advertises the Bearer challenge',
 test('lists the four read-only tools by default', async () => {
   const url = await start({});
   const names = await toolNames(await rpc(url, KEY, 'tools/list'));
-  assert.deepEqual(names.sort(), ['create_sandbox_link_token', 'get_sandbox_user', 'list_sandbox_users', 'plaid_status']);
+  assert.deepEqual(names.sort(), ['create_sandbox_link_token', 'get_sandbox_user', 'list_sandbox_scenarios', 'list_sandbox_users', 'plaid_status']);
 });
 
 test('document tools appear only when a store is configured', async () => {

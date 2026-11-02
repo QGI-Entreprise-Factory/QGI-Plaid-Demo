@@ -25,6 +25,10 @@ These guides are for building sample integrations; verify correctness, security 
 
 `.mcp.json` registers the `plaid` MCP server (`uvx mcp-server-plaid`), which provides `search_documentation`, `get_mock_data_prompt`, `get_sandbox_access_token` and `simulate_webhook`. It reads `PLAID_CLIENT_ID` and `PLAID_SECRET` from the environment — use **sandbox** credentials only. Requires [`uv`](https://docs.astral.sh/uv/).
 
+## What the sandbox can simulate
+
+`docs/sandbox-coverage.md` maps each operation (KYC, underwriting, income, payments) to its sandbox source and account gating. KYC (Identity Verification) and underwriting (Plaid Check test users `user_credit_*`) are not covered by `sandbox-users/`; both need products enabled on the Plaid account. The MCP tool `list_sandbox_scenarios` serves the same catalog.
+
 ## Sandbox custom users
 
 `sandbox-users/` holds custom Sandbox user JSON files from [Plaid-sandbox-custom-users](https://github.com/QGI-Entreprise-Factory/Plaid-sandbox-custom-users), grouped by product (`auth`, `transactions`, `income`, `liabilities`, ...). See `sandbox-users/README.md` for loading them via the Dashboard or `/sandbox/public_token/create`. Dates drift over time: run `python update_dates.py` from inside `sandbox-users/` (it uses relative paths) to refresh the files it lists, or re-fetch from the source repo. Note Plaid now recommends Sandbox Studio in the Dashboard for most custom-user needs.
